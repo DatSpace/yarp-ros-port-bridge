@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import rospy
-import math
+import rospy, time
+import numpy as np
 from std_msgs.msg import String
 
 if __name__ == '__main__':
@@ -8,8 +8,11 @@ if __name__ == '__main__':
 
     rospy.init_node('head_controler', anonymous=True)
 
-    rate = rospy.Rate(1000) # 10hz
-
+    pub.publish("/SIM_CER_ROBOT/head/rpc:i")
     while not rospy.is_shutdown():
-        pub.publish("0_70.5")
-        rate.sleep()
+        for i in np.arange(-20.0, 35.0, 0.5):
+            pub.publish("0_" + str(i))
+            time.sleep(0.05)
+        for i in np.arange(35.0, -20.0, -0.5):
+            pub.publish("0_" + str(i))
+            time.sleep(0.05)
