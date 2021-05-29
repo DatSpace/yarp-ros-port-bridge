@@ -1,2 +1,2 @@
 # yarp-rpc-ros-wrapper
-A simple wrapper for YARP rpc ports
+A simple ROS wrapper for YARP rpc ports
