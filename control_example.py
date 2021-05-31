@@ -13,17 +13,22 @@ if __name__ == '__main__':
 
     rospy.init_node('head_controler', anonymous=True)
 
-    pub.publish("/SIM_CER_ROBOT/head/rpc:i")
-    path_points = PointsInCircum(15)
-    while not rospy.is_shutdown():
+    rospy.rostime.wallsleep(0.5)
 
+    pub.publish("/SIM_CER_ROBOT/head/rpc:i")
+    pub.publish("set vel 0 5")
+    pub.publish("set vel 1 5")
+
+    path_points = PointsInCircum(15) # Circle with a radius of 15.
+
+    while not rospy.is_shutdown():
         if (doCircle):
             for point in path_points:
-                pub.publish("1_" + str(point[0]))
-                pub.publish("0_" + str(point[1]))
-                time.sleep(0.1)
+                pub.publish("set pos 1 " + str(point[0]))
+                pub.publish("set pos 0 " + str(point[1]))
+                rospy.rostime.wallsleep(0.1)
         else:
             point = random.choice(path_points)
-            pub.publish("1_" + str(point[0]))
-            pub.publish("0_" + str(point[1]))
-            time.sleep(1)
+            pub.publish("set pos 1 " + str(point[0]))
+            pub.publish("set pos 0 " + str(point[1]))
+            rospy.rostime.wallsleep(1.0)
