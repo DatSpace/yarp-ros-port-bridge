@@ -3,16 +3,16 @@
 #include <yarp/os/Port.h>
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include <algorithm>
 
-std::vector<std::pair<std::string, yarp::os::Port*>> ports_list;
+std::vector<std::pair<std::string, yarp::os::Port *>> ports_list;
+ros::Publisher pub;
 
 void wrapperCallback(const std_msgs::String::ConstPtr &msg)
 {
     std::stringstream data_stream_(msg->data);
     std::string data_segment;
     std::vector<std::string> segment_list;
-    
+
     while (std::getline(data_stream_, data_segment, ' '))
     {
         segment_list.push_back(data_segment);
@@ -28,10 +28,10 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
             {
                 std::cout << "Connecting to " << temp_server << std::endl;
 
-                ports_list.push_back(std::pair<std::string, yarp::os::Port*> (temp_server, new yarp::os::Port));
-                
-                ports_list[ports_list.size()-1].second->open(temp_server + "_wrapper");
-                ports_list[ports_list.size()-1].second->addOutput(temp_server);
+                ports_list.push_back(std::pair<std::string, yarp::os::Port *>(temp_server, new yarp::os::Port));
+
+                ports_list[ports_list.size() - 1].second->open(temp_server + "_wrapper");
+                ports_list[ports_list.size() - 1].second->addOutput(temp_server);
             }
             else
             {
@@ -57,7 +57,7 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
                         break;
                     }
                 }
-                ports_list.erase(ports_list.begin()+temp_pair_index);
+                ports_list.erase(ports_list.begin() + temp_pair_index);
             }
             else
             {
@@ -65,7 +65,7 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
                 return;
             }
         }
-        else if (segment_list[0] == "write")
+        else if (segment_list[0] == "write" || segment_list[0] == "read")
         {
             bool exists = false;
             yarp::os::Port *temp_port;
@@ -83,24 +83,31 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
 
             if (!exists)
             {
-                std::cout << "Port wrapper doesnt exist. Skipping..." << std::endl;
-                return;
+                std::cout << "Port wrapper specified dindn't exist..." << std::endl;
+                std::cout << "Connecting to " << temp_server << std::endl;
+
+                ports_list.push_back(std::pair<std::string, yarp::os::Port *>(temp_server, new yarp::os::Port));
+
+                ports_list[ports_list.size() - 1].second->open(temp_server + "_wrapper");
+                ports_list[ports_list.size() - 1].second->addOutput(temp_server);
             }
 
             if (temp_port->getOutputCount() == 0)
             {
-                std::cout << "Port exists but not connected to any other ports. Skipping..." << std::endl;
+                std::cout << "Port wrapper exists but not connected to any other ports. Skipping..." << std::endl;
                 return;
             }
-            else
-            {
-                yarp::os::Bottle cmd;
 
-                if (segment_list.size() < 3)
-                {
-                    std::cout << "Not enough paramaters received for writting. Skipping..." << std::endl;
-                    return;
-                }
+            yarp::os::Bottle cmd;
+
+            if (segment_list.size() < 3)
+            {
+                std::cout << "Not enough paramaters received for writting/reading. Skipping..." << std::endl;
+                return;
+            }
+
+            if (segment_list[0] == "write")
+            {
 
                 // for (int i = 2; i < segment_list.size(); i++)
                 // {
@@ -111,13 +118,30 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
                 cmd.addInt32(stoi(segment_list[4]));
                 cmd.addFloat32(stof(segment_list[5]));
 
-                std::cout << "Sending message: " << cmd.toString() << std::endl;
+                std::cout << "Writting: " << cmd.toString() << std::endl;
                 temp_port->write(cmd);
             }
-        }
-        else if (segment_list[0] == "read")
-        {
-            std::cout << "Reading is not implemented yet..." << std::endl;
+            else
+            {
+                cmd.addString(segment_list[2]);
+                cmd.addString(segment_list[3]);
+
+                yarp::os::Bottle response;
+                temp_port->write(cmd, response);
+
+                std::stringstream temp_stream(response.toString());
+                std::string temp_segment;
+                std::vector<std::string> temp_list;
+
+                while (std::getline(temp_stream, temp_segment, ' '))
+                {
+                    temp_list.push_back(temp_segment);
+                }
+                std::cout << "Read: " << temp_list[2] << std::endl;
+                std_msgs::String message;
+                message.data = temp_list[2];
+                pub.publish(message);
+            }
         }
         else
         {
@@ -136,9 +160,10 @@ int main(int argc, char *argv[])
     YARP_UNUSED(argv);
     yarp::os::Network yarp;
 
-    ros::init(argc, argv, "yarp_rpc_subscriber");
+    ros::init(argc, argv, "yarp_rpc_wrapper");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("yarp_rpc_publisher", 10, wrapperCallback);
+    ros::Subscriber sub = n.subscribe("yarp_rpc_wrapper_write", 10, wrapperCallback);
+    pub = n.advertise<std_msgs::String>("yarp_rpc_wrapper_read", 10);
 
     ros::spin();
 
