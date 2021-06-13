@@ -87,9 +87,9 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
                 std::cout << "Connecting to " << temp_server << std::endl;
 
                 ports_list.push_back(std::pair<std::string, yarp::os::Port *>(temp_server, new yarp::os::Port));
-
-                ports_list[ports_list.size() - 1].second->open(temp_server + "_wrapper");
-                ports_list[ports_list.size() - 1].second->addOutput(temp_server);
+                temp_port = ports_list[ports_list.size() - 1].second;
+                temp_port->open(temp_server + "_wrapper");
+                temp_port->addOutput(temp_server);
             }
 
             if (temp_port->getOutputCount() == 0)
@@ -108,11 +108,6 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
 
             if (segment_list[0] == "write")
             {
-
-                // for (int i = 2; i < segment_list.size(); i++)
-                // {
-                //     cmd.addString(segment_list[i]);
-                // }
                 cmd.addString(segment_list[2]);
                 cmd.addString(segment_list[3]);
                 cmd.addInt32(stoi(segment_list[4]));
