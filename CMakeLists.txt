@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(yarp-rpc-ros-wrapper VERSION 0.1.0)
+project(yarp-ros-port-bridge VERSION 0.1.0)
 
 
 file(GLOB SOURCES "src/*.cpp")

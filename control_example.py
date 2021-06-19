@@ -9,8 +9,8 @@ def PointsInCircum( r, n=10):
 doCircle = True
 
 if __name__ == '__main__':
-    rospy.init_node('yarp_rpc_wrapper_write_example', anonymous=True)
-    pub = rospy.Publisher('yarp_rpc_wrapper_write', String, queue_size=10)
+    rospy.init_node('yarp_ros_port_bridge_write_example', anonymous=True)
+    pub = rospy.Publisher('yarp_ros_port_bridge_write', String, queue_size=10)
 
     rospy.rostime.wallsleep(0.5)
 

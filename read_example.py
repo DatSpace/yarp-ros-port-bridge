@@ -3,13 +3,13 @@ import rospy, time, math
 from std_msgs.msg import String
 
 
-def wrapperCallback(msg):
+def subCallback(msg):
     print(msg.data)
 
 if __name__ == '__main__':
-    rospy.init_node('yarp_rpc_wrapper_read_example', anonymous=True)
-    pub = rospy.Publisher('yarp_rpc_wrapper_write', String, queue_size=10)
-    sub = rospy.Subscriber('yarp_rpc_wrapper_read', String, callback=wrapperCallback, queue_size=10)
+    rospy.init_node('yarp_ros_port_bridge_read_example', anonymous=True)
+    pub = rospy.Publisher('yarp_ros_port_bridge_write', String, queue_size=10)
+    sub = rospy.Subscriber('yarp_ros_port_bridge_read', String, callback=subCallback, queue_size=10)
 
     rospy.rostime.wallsleep(0.5)
 

@@ -7,7 +7,7 @@
 std::vector<std::pair<std::string, yarp::os::Port *>> ports_list;
 ros::Publisher pub;
 
-void wrapperCallback(const std_msgs::String::ConstPtr &msg)
+void subscriberCallback(const std_msgs::String::ConstPtr &msg)
 {
     std::stringstream data_stream_(msg->data);
     std::string data_segment;
@@ -24,18 +24,18 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
         {
             std::string temp_server = segment_list[1];
 
-            if (!yarp::os::Network::isConnected(temp_server + "_wrapper", temp_server))
+            if (!yarp::os::Network::isConnected(temp_server + "_bridge", temp_server))
             {
                 std::cout << "Connecting to " << temp_server << std::endl;
 
                 ports_list.push_back(std::pair<std::string, yarp::os::Port *>(temp_server, new yarp::os::Port));
 
-                ports_list[ports_list.size() - 1].second->open(temp_server + "_wrapper");
+                ports_list[ports_list.size() - 1].second->open(temp_server + "_bridge");
                 ports_list[ports_list.size() - 1].second->addOutput(temp_server);
             }
             else
             {
-                std::cout << "Wrapper already connected to " << temp_server << "! Skiping,.." << std::endl;
+                std::cout << "Bridge already connected to " << temp_server << "! Skiping,.." << std::endl;
                 return;
             }
         }
@@ -43,10 +43,10 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
         {
             std::string temp_server = segment_list[1];
 
-            if (yarp::os::Network::isConnected(temp_server + "_wrapper", temp_server))
+            if (yarp::os::Network::isConnected(temp_server + "_bridge", temp_server))
             {
                 std::cout << "Connecting to " << temp_server << std::endl;
-                yarp::os::Network::disconnect(temp_server + "_wrapper", temp_server);
+                yarp::os::Network::disconnect(temp_server + "_bridge", temp_server);
                 int temp_pair_index = 0;
                 for (int i = 0; i <= ports_list.size(); i++)
                 {
@@ -61,7 +61,7 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
             }
             else
             {
-                std::cout << "Wrapper not connected to " << temp_server << "! Skiping,.." << std::endl;
+                std::cout << "Bridge not connected to " << temp_server << "! Skiping,.." << std::endl;
                 return;
             }
         }
@@ -83,18 +83,18 @@ void wrapperCallback(const std_msgs::String::ConstPtr &msg)
 
             if (!exists)
             {
-                std::cout << "Port wrapper specified dindn't exist..." << std::endl;
+                std::cout << "Port bridge specified dindn't exist..." << std::endl;
                 std::cout << "Connecting to " << temp_server << std::endl;
 
                 ports_list.push_back(std::pair<std::string, yarp::os::Port *>(temp_server, new yarp::os::Port));
                 temp_port = ports_list[ports_list.size() - 1].second;
-                temp_port->open(temp_server + "_wrapper");
+                temp_port->open(temp_server + "_bridge");
                 temp_port->addOutput(temp_server);
             }
 
             if (temp_port->getOutputCount() == 0)
             {
-                std::cout << "Port wrapper exists but not connected to any other ports. Skipping..." << std::endl;
+                std::cout << "Port bridge exists but not connected to any other ports. Skipping..." << std::endl;
                 return;
             }
 
@@ -155,10 +155,10 @@ int main(int argc, char *argv[])
     YARP_UNUSED(argv);
     yarp::os::Network yarp;
 
-    ros::init(argc, argv, "yarp_rpc_wrapper");
+    ros::init(argc, argv, "yarp_ros_port_bridge");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("yarp_rpc_wrapper_write", 10, wrapperCallback);
-    pub = n.advertise<std_msgs::String>("yarp_rpc_wrapper_read", 10);
+    ros::Subscriber sub = n.subscribe("yarp_ros_port_bridge_write", 10, subscriberCallback);
+    pub = n.advertise<std_msgs::String>("yarp_ros_port_bridge_read", 10);
 
     ros::spin();
 
