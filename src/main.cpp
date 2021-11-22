@@ -134,7 +134,7 @@ void subscriberCallback(const std_msgs::String::ConstPtr &msg)
                 }
                 std::cout << "Read: " << temp_list[2] << std::endl;
                 std_msgs::String message;
-                message.data = temp_list[2];
+                message.data = segment_list[1] + " " + segment_list[4]+" "+temp_list[2];
                 pub.publish(message);
             }
         }
